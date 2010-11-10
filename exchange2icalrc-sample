@@ -1,0 +1,24 @@
+[exchange2ical]
+#your username (eg 'DOMAIN\username' or 'username')
+username = 'myuser'
+
+#your password
+password = 'secret'
+
+#authentication url of owa
+auth_url = u'https://host.tld/exchweb/bin/auth/owaauth.dll'
+
+#public folder url
+pf_url = u'https://host.tld/public/foo/?Cmd=contents'
+
+#how many days to fetch in advance
+days = 50
+
+#timeout for http requests
+timeout = 5
+
+#how many url fetch threads
+url_threads = 2
+
+#how many dataming threads
+html_threads = 1

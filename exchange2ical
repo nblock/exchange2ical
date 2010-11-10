@@ -1,0 +1,179 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+##
+# exchange2ical
+# author: notizblock <nblock@archlinux.us>
+# license: AGPLv3
+
+import urllib2
+import urllib
+import sys
+import Queue
+import threading
+import datetime
+from BeautifulSoup import BeautifulSoup
+import re
+import codecs
+from ConfigParser import SafeConfigParser
+
+class Config():
+    '''read configuration from file and provide it via getattr()
+
+    TODO: 
+    -search path and file checking
+    -check validity of each option before serving it
+    '''
+    def __init__(self):
+        self.configfile = u'exchange2icalrc'
+        self.section = u'exchange2ical'
+        self.parser = SafeConfigParser()
+        with codecs.open(self.configfile, 'r', encoding='utf-8') as f:
+            self.parser.readfp(f)
+
+    def __getattr__(self, name):
+        if self.parser.has_option(self.section, name):
+            return self.parser.get(self.section, name, raw=True)
+        else:
+            return None
+
+class ExchangeHelpers():
+    '''a little helper class for Exchange'''
+    def authenticate(self):
+        '''authenticate with owa 
+        
+        True if ok, False otherwise'''
+        c = Config()
+        data = urllib.urlencode({
+            u'username': c.username , 
+            u'password': c.password,
+            u'destination' : c.pf_url,
+            u'flags' : u'0'})
+        res = urllib2.urlopen(c.auth_url, data)
+        if res.code != 200: #die if something went wrong.
+            return False
+        return True
+
+class ThreadExchange(threading.Thread):
+    '''Threaded Exchange fetcher'''
+    def __init__(self, url_queue, html_queue):
+        threading.Thread.__init__(self)
+        self.url_queue = url_queue
+        self.html_queue = html_queue
+
+    def run(self):
+        while True:
+            (d,m,y) = self.url_queue.get()
+            url = (u'%s?Cmd=contents&View=Daily&m=%s&d=%s&y=%s' % (Config().pf_url, m, d, y))
+
+            chunk = urllib2.urlopen(url).read()
+            start = chunk.find('<TABLE class="calDayVwTbl')
+            end = chunk.find('</TABLE>',start)
+            
+            #put table in html_queue
+            self.html_queue.put((chunk[start:end+len('</TABLE>')], (d,m,y)))
+
+            self.url_queue.task_done()
+
+class ThreadDatamine(threading.Thread):
+    '''Threaded dataminer'''
+    def __init__(self, html_queue, cal_queue):
+        threading.Thread.__init__(self)
+        self.html_queue = html_queue
+        self.cal_queue = cal_queue
+
+    def run(self):
+        while True:
+            #grabs host from queue
+            (chunk, (d,m,y)) = self.html_queue.get()
+
+            #parse the chunk
+            #print chunk
+            soup = BeautifulSoup(chunk)
+            tds = soup.findAll('td', {'title' : True})
+            #print d,m,y,'--'
+            for elem in tds:
+                #print elem['title'], elem.next.next.contents
+               
+                #date magic
+                tfoo = elem['title']
+                mo=re.match('^\d{2}:\d{2}-\d{2}:\d{2}',tfoo)
+                if mo:
+                    print 'normal:', mo.group()
+                else:
+                    print 'ganztags:'
+
+
+                #date = elem['title'].split(' ')[0]
+                #print date
+                #if date.index(':'):
+                #    print 'datum'
+                #else:
+                #    print 'ganztags'
+                if len(elem.next.next.contents) == 2:
+                    print elem.next.next.contents[1]
+                else:
+                    print elem.next.next.contents[0]
+            
+            #event object of icalender
+            self.cal_queue.put('1')
+            #print '1'
+            #signals to queue job is done
+            self.html_queue.task_done()
+
+
+def iter_except(func, exception, first=None):
+    '''Call a function repeatedly until an exception is raised.'''
+    try:
+        if first is not None:
+            yield first()            # For database APIs needing an initial cast to db.first()
+        while 1:
+            yield func()
+    except exception:
+        pass
+
+if __name__ == '__main__':
+    url_queue = Queue.Queue()
+    html_queue = Queue.Queue()
+    cal_queue = Queue.Queue()
+    c = Config()
+
+    print 'start exchange2ical'
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
+    urllib2.install_opener(opener)
+
+    eh = ExchangeHelpers()
+    if not eh.authenticate():
+        print 'authentication with owa failed!'
+        sys.exit(1)
+
+    #spawn some fetchers
+    for i in range(int(c.url_threads)):
+        t = ThreadExchange(url_queue, html_queue)
+        t.setDaemon(True)
+        t.start()
+
+    #populate url_queue with data
+    #...?Cmd=contents&View=Daily&m=11&d=11&y=2010
+    for x in range(int(c.days)):
+        da = datetime.datetime.today()+datetime.timedelta(x)
+        url_queue.put((da.day, da.month, da.year))
+
+    #spawn some datamining threads
+    for i in range(int(c.html_threads)):
+        dt = ThreadDatamine(html_queue, cal_queue)
+        dt.setDaemon(True)
+        dt.start()
+    
+    #wait until data processing has been finished
+    url_queue.join()
+    html_queue.join()
+
+    #write everything to a file
+    with codecs.open('test.txt','w','utf-8') as f:
+        for elem in iter_except(cal_queue.get_nowait, Queue.Empty):
+            f.write(elem+'\n')
+            #print '--:'
+            print elem
+    #cal_queue.join()
+
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 smartindent autoindent 
