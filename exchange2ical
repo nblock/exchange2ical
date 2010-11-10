@@ -63,10 +63,11 @@ class ThreadExchange(threading.Thread):
 
     def run(self):
         while True:
+            #...?Cmd=contents&View=Daily&m=11&d=11&y=2010
             (d,m,y) = self.url_queue.get()
             url = (u'%s?Cmd=contents&View=Daily&m=%s&d=%s&y=%s' % (Config().pf_url, m, d, y))
 
-            chunk = urllib2.urlopen(url).read()
+            chunk = unicode(urllib2.urlopen(url).read(), 'utf-8')
             start = chunk.find('<TABLE class="calDayVwTbl')
             end = chunk.find('</TABLE>',start)
             
@@ -150,7 +151,6 @@ if __name__ == '__main__':
         t.start()
 
     #populate url_queue with data
-    #...?Cmd=contents&View=Daily&m=11&d=11&y=2010
     for x in range(int(c.days)):
         da = datetime.datetime.today()+datetime.timedelta(x)
         url_queue.put((da.day, da.month, da.year))
@@ -166,11 +166,13 @@ if __name__ == '__main__':
     html_queue.join()
 
     #write everything to a file
-    with codecs.open('test.txt','w','utf-8') as f:
-        for elem in iter_except(cal_queue.get_nowait, Queue.Empty):
-            #f.write(elem+'\n')
-            #print '--:'
-            print str(elem)
-    #cal_queue.join()
+    cal = Calendar()
+    cal.add('prodid', '-//exchange2ical//mxm.dk//')
+    cal.add('version', '2.0')
+    for elem in iter_except(cal_queue.get_nowait, Queue.Empty):
+        cal.add_component(elem)
+
+    with open('test.ics','wb') as f:
+        f.write(cal.as_string())
 
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 smartindent autoindent 
