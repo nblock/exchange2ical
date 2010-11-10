@@ -107,6 +107,8 @@ class ThreadDatamine(threading.Thread):
                 else:
                     title = elem.next.next.contents[0]
 
+                #title = ''.join(title.findAll(text=True))
+                #TODO: strip/replace HTML-tags
                 event = Event()
                 event.add('dtstart', dstart)
                 event.add('dtend', dend)
