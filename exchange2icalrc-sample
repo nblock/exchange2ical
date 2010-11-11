@@ -23,5 +23,5 @@ timeout = 5
 #how many url fetch threads
 url_threads = 2
 
-#how many dataming threads
+#how many datamining threads
 html_threads = 1
