@@ -6,7 +6,6 @@
 # license: AGPLv3
 # TODO:
 # -correctly manage whole day events
-# -parse room information
 # -search path and file checking (config)
 # -check validity of each option before serving it (config)
 # -handle urllib* errors (exception)
@@ -95,6 +94,8 @@ class ThreadDatamine(threading.Thread):
             soup = BeautifulSoup(chunk)
             tds = soup.findAll('td', {'title' : True})
             for elem in tds:    #each event
+                event = Event()
+
                 #extract time
                 tfoo = elem['title']
                 mo=re.match('^\d{2}:\d{2}-\d{2}:\d{2}',tfoo)
@@ -105,6 +106,10 @@ class ThreadDatamine(threading.Thread):
                     #TODO: implement whole day events properly
                     dstart = dend = datetime.datetime(y, m, d)
                 
+                event.add('dtstart', dstart)
+                event.add('dtend', dend)
+                event.add('dtstamp', datetime.datetime.today())
+
                 #extract title
                 if len(elem.next.next.contents) == 2:
                     title = elem.next.next.contents[1]
@@ -113,13 +118,13 @@ class ThreadDatamine(threading.Thread):
                 #replace some crap
                 title = re.sub('&amp;', '&', title, re.IGNORECASE)
                 title = re.sub('&nbsp;', ' ', title, re.IGNORECASE)
-
-                event = Event()
-                event.add('dtstart', dstart)
-                event.add('dtend', dend)
-                event.add('dtstamp', datetime.datetime.today())
                 event.add('summary', title)
                 event.add('description', title)
+                
+                #extract location (if possible)
+                mo = re.match('.*\((.*)\)$', title)
+                if mo:
+                    event.add('location', mo.group(1).strip())
             
                 #event object of icalender
                 self.cal_queue.put(event)
