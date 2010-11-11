@@ -99,6 +99,7 @@ class ThreadDatamine(threading.Thread):
                     dstart = datetime.datetime(y, m, d, int(tfoo[:2]), int(tfoo[3:5]))
                     dend = datetime.datetime(y, m, d, int(tfoo[6:8]), int(tfoo[9:11]))
                 else:   #whole day event
+                    #TODO: implement whole day events properly
                     dstart = dend = datetime.datetime(y, m, d)
                 
                 #extract title
@@ -106,9 +107,10 @@ class ThreadDatamine(threading.Thread):
                     title = elem.next.next.contents[1]
                 else:
                     title = elem.next.next.contents[0]
+                #replace some crap
+                title = re.sub('&amp;', '&', title, re.IGNORECASE)
+                title = re.sub('&nbsp;', ' ', title, re.IGNORECASE)
 
-                #title = ''.join(title.findAll(text=True))
-                #TODO: strip/replace HTML-tags
                 event = Event()
                 event.add('dtstart', dstart)
                 event.add('dtend', dend)
