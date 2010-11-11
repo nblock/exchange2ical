@@ -23,6 +23,7 @@ import re
 import codecs
 from ConfigParser import SafeConfigParser
 from icalendar import Calendar, Event
+import socket
 
 class Config():
     '''read configuration from file and provide it via getattr()'''
@@ -142,6 +143,7 @@ if __name__ == '__main__':
     c = Config()
 
     print 'start exchange2ical'
+    socket.setdefaulttimeout(int(c.timeout)) #apply global timeout
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
 
