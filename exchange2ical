@@ -142,12 +142,13 @@ def iter_except(func, exception, first=None):
         pass
 
 if __name__ == '__main__':
+    sdt = datetime.datetime.now() 
+    print 'start exchange2ical (%s)' % sdt
+
     url_queue = Queue.Queue()
     html_queue = Queue.Queue()
     cal_queue = Queue.Queue()
     c = Config()
-
-    print 'start exchange2ical'
     socket.setdefaulttimeout(int(c.timeout)) #apply global timeout
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
@@ -190,4 +191,8 @@ if __name__ == '__main__':
             f.write(cal.as_string())
     except IOError:
         print 'cannot write to file "%s" (permission denied).' % c.ics_file
+    
+    enddt = datetime.datetime.now() 
+    print 'finished exchange2ical (%s). Elapsed time: %s' % (enddt, enddt-sdt)
+
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 smartindent autoindent 
