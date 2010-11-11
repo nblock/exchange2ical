@@ -176,7 +176,9 @@ if __name__ == '__main__':
     for elem in iter_except(cal_queue.get_nowait, Queue.Empty):
         cal.add_component(elem)
 
-    with open('test.ics','wb') as f:
-        f.write(cal.as_string())
-
+    try:
+        with open(c.ics_file,'wb') as f:
+            f.write(cal.as_string())
+    except IOError:
+        print 'cannot write to file "%s" (permission denied).' % c.ics_file
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 smartindent autoindent 

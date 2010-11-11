@@ -1,18 +1,21 @@
 [exchange2ical]
 #your username (eg 'DOMAIN\username' or 'username')
-username = 'myuser'
+username = myuser
 
 #your password
-password = 'secret'
+password = secret
 
 #authentication url of owa
-auth_url = u'https://host.tld/exchweb/bin/auth/owaauth.dll'
+auth_url = https://host.tld/exchweb/bin/auth/owaauth.dll
 
 #public folder url
-pf_url = u'https://host.tld/public/foo/?Cmd=contents'
+pf_url = https://host.tld/public/foo/?Cmd=contents
 
 #how many days to fetch in advance
 days = 50
+
+#ics file (full path+name required)
+ics_file = /home/username/cal.ics
 
 #timeout for http requests
 timeout = 5
