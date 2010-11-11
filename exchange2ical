@@ -4,6 +4,13 @@
 # exchange2ical
 # author: notizblock <nblock@archlinux.us>
 # license: AGPLv3
+# TODO:
+# -correctly manage whole day events
+# -parse room information
+# -search path and file checking (config)
+# -check validity of each option before serving it (config)
+# -handle urllib* errors (exception)
+# -more testing
 
 import urllib2
 import urllib
@@ -18,12 +25,7 @@ from ConfigParser import SafeConfigParser
 from icalendar import Calendar, Event
 
 class Config():
-    '''read configuration from file and provide it via getattr()
-
-    TODO: 
-    -search path and file checking
-    -check validity of each option before serving it
-    '''
+    '''read configuration from file and provide it via getattr()'''
     def __init__(self):
         self.configfile = u'exchange2icalrc'
         self.section = u'exchange2ical'
