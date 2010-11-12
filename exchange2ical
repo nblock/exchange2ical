@@ -5,7 +5,6 @@
 # author: notizblock <nblock@archlinux.us>
 # license: AGPLv3
 # TODO:
-# -search path and file checking (config)
 # -check validity of each option before serving it (config)
 # -handle urllib* errors (exception)
 # -more testing
@@ -22,13 +21,26 @@ import codecs
 from ConfigParser import SafeConfigParser
 from icalendar import Calendar, Event
 import socket
+import os
 
 class Config():
     '''read configuration from file and provide it via getattr()'''
     def __init__(self):
-        self.configfile = u'exchange2icalrc'
+        self.configpath = ['/'.join((os.environ['HOME'],'.exchange2ical')), '/etc']
+        self.basefile = u'exchange2icalrc'
+        self.configfile = None
         self.section = u'exchange2ical'
         self.parser = SafeConfigParser()
+        for path in self.configpath:
+            tmp = '/'.join((path,self.basefile))
+            if os.path.isfile(tmp):
+                self.configfile = tmp
+                break
+
+        if not self.configfile:
+            print 'No config file found. aborting!'
+            sys.exit(1)
+
         with codecs.open(self.configfile, 'r', encoding='utf-8') as f:
             self.parser.readfp(f)
 
