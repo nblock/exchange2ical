@@ -25,3 +25,6 @@ url_threads = 2
 
 #how many datamining threads
 html_threads = 1
+
+#lock file
+lock_file = /tmp/exchange2ical.lock

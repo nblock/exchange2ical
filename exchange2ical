@@ -22,6 +22,7 @@ from ConfigParser import SafeConfigParser
 from icalendar import Calendar, Event
 import socket
 import os
+import fcntl
 
 class Config():
     '''read configuration from file and provide it via getattr()'''
@@ -151,7 +152,7 @@ def iter_except(func, exception, first=None):
     except exception:
         pass
 
-if __name__ == '__main__':
+def main():
     sdt = datetime.datetime.now() 
     print 'start exchange2ical (%s)' % sdt
 
@@ -204,5 +205,18 @@ if __name__ == '__main__':
     
     enddt = datetime.datetime.now() 
     print 'finished exchange2ical (%s). Elapsed time: %s' % (enddt, enddt-sdt)
+
+if __name__ == '__main__':
+    #here is our entry point
+    lock_file = Config().lock_file
+    fp = open(lock_file, 'w')
+    try:
+        fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        main()      #do work
+        fp.close()  #close and clean up
+        os.unlink(lock_file)
+    except IOError:
+        print 'another instance is running. exiting now.'
+        sys.exit(1)
 
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4 smartindent autoindent 
