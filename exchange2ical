@@ -62,10 +62,15 @@ class ExchangeHelpers():
             u'password': c.password,
             u'destination' : c.pf_url,
             u'flags' : u'0'})
-        res = urllib2.urlopen(c.auth_url, data)
-        if res.code != 200: #die if something went wrong.
-            return False
-        return True
+        try:
+            res = urllib2.urlopen(c.auth_url, data)
+        except IOError, e:
+            if hasattr(e, 'reason'):
+                print 'an error occured during authentication (reason: %s). Exiting now.' % e.reason
+                sys.exit(1)
+            elif hasattr(e, 'code'):
+                print 'The server couldn\'t fulfill the authentication request (error code: %s). Exiting now.' % e.code
+                sys.exit(1)
 
 class ThreadExchange(threading.Thread):
     '''Threaded Exchange fetcher'''
@@ -170,10 +175,7 @@ def main():
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
 
-    eh = ExchangeHelpers()
-    if not eh.authenticate():
-        print 'authentication with owa failed!'
-        sys.exit(1)
+    eh = ExchangeHelpers().authenticate()
 
     #spawn some fetchers
     for i in range(int(c.url_threads)):
