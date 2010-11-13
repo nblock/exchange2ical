@@ -13,7 +13,7 @@ optional:
   - a webserver
 
 install process:
- 1) copy exchange2icalrc-sample to exchange2icalrc
+ 1) copy exchange2icalrc-sample to either /etc/exchange2icalrc or $HOME/.exchange2ical/exchange2icalrc (prioritised)
  2) adjust config to your needs
  3) add a cron job (eg. */30 * * * * /path/to/exchange2ical)
 
