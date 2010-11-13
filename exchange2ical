@@ -6,7 +6,6 @@
 # license: AGPLv3
 # TODO:
 # -check validity of each option before serving it (config)
-# -handle urllib* errors (exception)
 # -more testing
 
 import urllib2
@@ -81,12 +80,19 @@ class ThreadExchange(threading.Thread):
             (d,m,y) = self.url_queue.get()
             url = (u'%s?Cmd=contents&View=Daily&m=%s&d=%s&y=%s' % (Config().pf_url, m, d, y))
 
-            chunk = unicode(urllib2.urlopen(url).read(), 'utf-8')
-            start = chunk.find('<TABLE class="calDayVwTbl')
-            end = chunk.find('</TABLE>',start)
+            try:
+                chunk = unicode(urllib2.urlopen(url).read(), 'utf-8')
+                start = chunk.find('<TABLE class="calDayVwTbl')
+                end = chunk.find('</TABLE>',start)
             
-            #put table in html_queue
-            self.html_queue.put((chunk[start:end+len('</TABLE>')], (d,m,y)))
+                #put table in html_queue
+                self.html_queue.put((chunk[start:end+len('</TABLE>')], (d,m,y)))
+            except IOError, e:
+                if hasattr(e, 'reason'):
+                    print 'an error occured while fetching calendar resource (reason: %s).' % e.reason
+                    print 'entries from %s.%s.%s will not be included in the calendar file.' % (d,m,y)
+                elif hasattr(e, 'code'):
+                    print 'The server couldn\'t fulfill the request (error code: %s).' % e.code
 
             self.url_queue.task_done()
 
