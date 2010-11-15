@@ -14,7 +14,7 @@ import sys
 import Queue
 import threading
 import datetime
-from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup, Tag
 import re
 import codecs
 from ConfigParser import SafeConfigParser
@@ -102,6 +102,7 @@ class ThreadExchange(threading.Thread):
             self.url_queue.task_done()
 
 class ThreadDatamine(threading.Thread):
+
     '''Threaded dataminer'''
     def __init__(self, html_queue, cal_queue):
         threading.Thread.__init__(self)
@@ -135,6 +136,9 @@ class ThreadDatamine(threading.Thread):
                 #extract title
                 if len(elem.next.next.contents) == 2:
                     title = elem.next.next.contents[1]
+                    #if title is a text: use element 0
+                    if isinstance(title, Tag):
+                        title = elem.next.next.contents[0]
                 else:
                     title = elem.next.next.contents[0]
                 #replace some crap
