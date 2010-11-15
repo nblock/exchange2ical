@@ -102,7 +102,6 @@ class ThreadExchange(threading.Thread):
             self.url_queue.task_done()
 
 class ThreadDatamine(threading.Thread):
-
     '''Threaded dataminer'''
     def __init__(self, html_queue, cal_queue):
         threading.Thread.__init__(self)
