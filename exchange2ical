@@ -219,8 +219,8 @@ def main():
         cal.add_component(elem)
 
     try:
-        with open(c.ics_file,'wb') as f:
-            f.write(cal.as_string())
+        with codecs.open(c.ics_file,'w', 'utf-8-sig') as f:
+            f.write(unicode(cal.as_string(), 'utf-8'))
     except IOError:
         print 'cannot write to file "%s" (permission denied).' % c.ics_file
     
