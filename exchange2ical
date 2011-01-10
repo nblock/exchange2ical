@@ -156,7 +156,6 @@ class ThreadDatamine(threading.Thread):
                 self.cal_queue.put(event)
             self.html_queue.task_done()
 
-
 class GMT1(datetime.tzinfo):
     '''Timezone Class for GMT+1'''
     def utcoffset(self,dt):
