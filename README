@@ -10,7 +10,8 @@ dependencies:
   - python-icalendar
 
 optional:
-  - a webserver
+  - any webserver
+  - any cron daemon
 
 install process:
  1) copy exchange2icalrc-sample to either /etc/exchange2icalrc or $HOME/.exchange2ical/exchange2icalrc (prioritised)
