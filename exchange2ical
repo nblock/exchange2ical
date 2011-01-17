@@ -196,9 +196,10 @@ def main():
         t.start()
 
     #populate url_queue with data
+    da = datetime.date.today()
     for x in range(int(c.days)):
-        da = datetime.datetime.today()+datetime.timedelta(x)
-        url_queue.put((da.day, da.month, da.year))
+        tmp = da+datetime.timedelta(x)
+        url_queue.put((tmp.day, tmp.month, tmp.year))
 
     #spawn some datamining threads
     for i in range(int(c.html_threads)):
