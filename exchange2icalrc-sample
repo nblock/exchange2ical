@@ -31,3 +31,6 @@ lock_file = /tmp/exchange2ical.lock
 
 #log file
 log_file = exchange2ical.log
+
+#log level (debug, info, warning, error, critical)
+log_level = info
