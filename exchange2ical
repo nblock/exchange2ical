@@ -17,7 +17,7 @@ import datetime
 from BeautifulSoup import BeautifulSoup, Tag
 import re
 import codecs
-from ConfigParser import SafeConfigParser
+from ConfigParser import ConfigParser
 from icalendar import Calendar, Event
 import socket
 import os
@@ -31,7 +31,13 @@ class Config():
         self.basefile = u'exchange2icalrc'
         self.configfile = None
         self.section = u'exchange2ical'
-        self.parser = SafeConfigParser()
+        self.valid_log_levels = {'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL}
+
+        self.parser = ConfigParser()
         for path in self.configpath:
             tmp = '/'.join((path,self.basefile))
             if os.path.isfile(tmp):
@@ -45,11 +51,21 @@ class Config():
         with codecs.open(self.configfile, 'r', encoding='utf-8') as f:
             self.parser.readfp(f)
 
+        self.validate_config()
+
     def __getattr__(self, name):
+        '''getter and setter'''
         if self.parser.has_option(self.section, name):
             return self.parser.get(self.section, name, raw=True)
         else:
             return None
+
+    def validate_config(self):
+        '''validate config values'''
+        #log level
+        level = self.parser.get(self.section, 'log_level')
+        level = self.valid_log_levels.get(level, logging.DEBUG) #if no mapping is available-> DEBUG
+        self.parser.set(self.section, 'log_level', level)
 
 class ExchangeHelpers():
     '''a little helper class for Exchange'''
@@ -184,9 +200,9 @@ def main():
     #configure logging
     c = Config()
     logger = logging.getLogger('exchange2ical')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(c.log_level)
     fh = logging.FileHandler(c.log_file)
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(c.log_level)
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     fh.setFormatter(formatter)
     logger.addHandler(fh)
