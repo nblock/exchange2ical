@@ -31,12 +31,6 @@ class Config():
         self.basefile = u'exchange2icalrc'
         self.configfile = None
         self.section = u'exchange2ical'
-        self.valid_log_levels = {'debug': logging.DEBUG,
-            'info': logging.INFO,
-            'warning': logging.WARNING,
-            'error': logging.ERROR,
-            'critical': logging.CRITICAL}
-
         self.parser = ConfigParser()
         for path in self.configpath:
             tmp = '/'.join((path,self.basefile))
@@ -62,9 +56,15 @@ class Config():
 
     def validate_config(self):
         '''validate config values'''
+        valid_log_levels = {'debug': logging.DEBUG,
+            'info': logging.INFO,
+            'warning': logging.WARNING,
+            'error': logging.ERROR,
+            'critical': logging.CRITICAL}
+
         #log level
         level = self.parser.get(self.section, 'log_level')
-        level = self.valid_log_levels.get(level, logging.DEBUG) #if no mapping is available-> DEBUG
+        level = valid_log_levels.get(level, logging.DEBUG) #if no mapping is available-> DEBUG
         self.parser.set(self.section, 'log_level', level)
 
 class ExchangeHelpers():
