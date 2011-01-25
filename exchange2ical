@@ -75,14 +75,13 @@ class ExchangeHelpers():
         '''authenticate with owa 
         
         True if ok, False otherwise'''
-        c = Config()
         data = urllib.urlencode({
-            u'username': c.username , 
-            u'password': c.password,
-            u'destination' : c.pf_url,
+            u'username': config.username , 
+            u'password': config.password,
+            u'destination' : config.pf_url,
             u'flags' : u'0'})
         try:
-            res = urllib2.urlopen(c.auth_url, data)
+            res = urllib2.urlopen(config.auth_url, data)
         except IOError, e:
             if hasattr(e, 'reason'):
                 self.log.critical('an error occured during authentication (reason: %s). Exiting now.') % e.reason
@@ -104,7 +103,7 @@ class ThreadExchange(threading.Thread):
         while True:
             #...?Cmd=contents&View=Daily&m=11&d=11&y=2010
             (d,m,y) = self.url_queue.get()
-            url = (u'%s?Cmd=contents&View=Daily&m=%s&d=%s&y=%s' % (Config().pf_url, m, d, y))
+            url = (u'%s?Cmd=contents&View=Daily&m=%s&d=%s&y=%s' % (config.pf_url, m, d, y))
 
             try:
                 chunk = unicode(urllib2.urlopen(url).read(), 'utf-8')
@@ -198,11 +197,10 @@ def iter_except(func, exception, first=None):
 
 def main():
     #configure logging
-    c = Config()
     logger = logging.getLogger('exchange2ical')
-    logger.setLevel(c.log_level)
-    fh = logging.FileHandler(c.log_file)
-    fh.setLevel(c.log_level)
+    logger.setLevel(config.log_level)
+    fh = logging.FileHandler(config.log_file)
+    fh.setLevel(config.log_level)
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     fh.setFormatter(formatter)
     logger.addHandler(fh)
@@ -211,26 +209,26 @@ def main():
     url_queue = Queue.Queue()
     html_queue = Queue.Queue()
     cal_queue = Queue.Queue()
-    socket.setdefaulttimeout(int(c.timeout)) #apply global timeout
+    socket.setdefaulttimeout(int(config.timeout)) #apply global timeout
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
 
     eh = ExchangeHelpers().authenticate()
 
     #spawn some fetchers
-    for i in range(int(c.url_threads)):
+    for i in range(int(config.url_threads)):
         t = ThreadExchange(url_queue, html_queue)
         t.setDaemon(True)
         t.start()
 
     #populate url_queue with data
     da = datetime.date.today()
-    for x in range(int(c.days)):
+    for x in range(int(config.days)):
         tmp = da+datetime.timedelta(x)
         url_queue.put((tmp.day, tmp.month, tmp.year))
 
     #spawn some datamining threads
-    for i in range(int(c.html_threads)):
+    for i in range(int(config.html_threads)):
         dt = ThreadDatamine(html_queue, cal_queue)
         dt.setDaemon(True)
         dt.start()
@@ -247,16 +245,18 @@ def main():
         cal.add_component(elem)
 
     try:
-        with codecs.open(c.ics_file,'w', 'utf-8') as f:
+        with codecs.open(config.ics_file,'w', 'utf-8') as f:
             f.write(unicode(cal.as_string(), 'utf-8'))
     except IOError:
-        logger.error('cannot write to file "%s" (permission denied).') % c.ics_file
+        logger.error('cannot write to file "%s" (permission denied).') % config.ics_file
     
     logger.info('finished exchange2ical')
 
 if __name__ == '__main__':
     #here is our entry point
-    lock_file = Config().lock_file
+    #global config
+    config = Config()       
+    lock_file = config.lock_file
     fp = open(lock_file, 'w')
     try:
         fcntl.lockf(fp, fcntl.LOCK_EX | fcntl.LOCK_NB)
