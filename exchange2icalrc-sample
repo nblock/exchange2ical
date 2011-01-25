@@ -28,3 +28,6 @@ html_threads = 1
 
 #lock file
 lock_file = /tmp/exchange2ical.lock
+
+#log file
+log_file = exchange2ical.log

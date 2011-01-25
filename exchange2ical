@@ -22,6 +22,7 @@ from icalendar import Calendar, Event
 import socket
 import os
 import fcntl
+import logging
 
 class Config():
     '''read configuration from file and provide it via getattr()'''
@@ -57,6 +58,7 @@ class ExchangeHelpers():
         
         True if ok, False otherwise'''
         c = Config()
+        log = logging.getLogger('exchange2ical.ExchangeHelpers')
         data = urllib.urlencode({
             u'username': c.username , 
             u'password': c.password,
@@ -66,10 +68,10 @@ class ExchangeHelpers():
             res = urllib2.urlopen(c.auth_url, data)
         except IOError, e:
             if hasattr(e, 'reason'):
-                print 'an error occured during authentication (reason: %s). Exiting now.' % e.reason
+                log.critical('an error occured during authentication (reason: %s). Exiting now.') % e.reason
                 sys.exit(1)
             elif hasattr(e, 'code'):
-                print 'The server couldn\'t fulfill the authentication request (error code: %s). Exiting now.' % e.code
+                log.critical('The server couldn\'t fulfill the authentication request (error code: %s). Exiting now.') % e.code
                 sys.exit(1)
 
 class ThreadExchange(threading.Thread):
@@ -176,13 +178,20 @@ def iter_except(func, exception, first=None):
         pass
 
 def main():
-    sdt = datetime.datetime.now() 
-    print 'start exchange2ical (%s)' % sdt
+    #configure logging
+    c = Config()
+    logger = logging.getLogger('exchange2ical')
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(c.log_file)
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.info('start exchange2ical')
 
     url_queue = Queue.Queue()
     html_queue = Queue.Queue()
     cal_queue = Queue.Queue()
-    c = Config()
     socket.setdefaulttimeout(int(c.timeout)) #apply global timeout
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
@@ -222,10 +231,9 @@ def main():
         with codecs.open(c.ics_file,'w', 'utf-8') as f:
             f.write(unicode(cal.as_string(), 'utf-8'))
     except IOError:
-        print 'cannot write to file "%s" (permission denied).' % c.ics_file
+        logger.error('cannot write to file "%s" (permission denied).') % c.ics_file
     
-    enddt = datetime.datetime.now() 
-    print 'finished exchange2ical (%s). Elapsed time: %s' % (enddt, enddt-sdt)
+    logger.info('finished exchange2ical')
 
 if __name__ == '__main__':
     #here is our entry point
