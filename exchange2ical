@@ -84,10 +84,10 @@ class ExchangeHelpers():
             res = urllib2.urlopen(config.auth_url, data)
         except IOError, e:
             if hasattr(e, 'reason'):
-                self.log.critical('an error occured during authentication (reason: %s). Exiting now.') % e.reason
+                self.log.critical('an error occured during authentication (reason: %s). Exiting now.' % e.reason)
                 sys.exit(1)
             elif hasattr(e, 'code'):
-                self.log.critical('The server couldn\'t fulfill the authentication request (error code: %s). Exiting now.') % e.code
+                self.log.critical('The server couldn\'t fulfill the authentication request (error code: %s). Exiting now.' % e.code)
                 sys.exit(1)
         self.log.debug('authentication succeeded')
 
@@ -114,10 +114,10 @@ class ThreadExchange(threading.Thread):
                 self.html_queue.put((chunk[start:end+len('</TABLE>')], (d,m,y)))
             except IOError, e:
                 if hasattr(e, 'reason'):
-                    self.log.warning('an error occured while fetching calendar resource (reason: %s).') % e.reason
-                    self.log.warning('entries from %s.%s.%s will not be included in the calendar file.') % (d,m,y)
+                    self.log.warning('an error occured while fetching calendar resource (reason: %s).' % e.reason)
+                    self.log.warning('entries from %s.%s.%s will not be included in the calendar file.' % (d,m,y))
                 elif hasattr(e, 'code'):
-                    self.log.warning('The server couldn\'t fulfill the request (error code: %s).') % e.code
+                    self.log.warning('The server couldn\'t fulfill the request (error code: %s).' % e.code)
 
             self.url_queue.task_done()
 
@@ -248,7 +248,7 @@ def main():
         with codecs.open(config.ics_file,'w', 'utf-8') as f:
             f.write(unicode(cal.as_string(), 'utf-8'))
     except IOError:
-        logger.error('cannot write to file "%s" (permission denied).') % config.ics_file
+        logger.error('cannot write to file "%s" (permission denied).' % config.ics_file )
     
     logger.info('finished exchange2ical')
 
