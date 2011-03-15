@@ -213,7 +213,7 @@ def main():
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor())
     urllib2.install_opener(opener)
 
-    eh = ExchangeHelpers().authenticate()
+    ExchangeHelpers().authenticate()
 
     #spawn some fetchers
     for i in range(int(config.url_threads)):
