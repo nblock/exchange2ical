@@ -19,7 +19,6 @@ import re
 import codecs
 from ConfigParser import ConfigParser
 from icalendar import Calendar, Event
-from pytz import timezone
 import pytz
 import socket
 import os
@@ -135,13 +134,15 @@ class ThreadDatamine(threading.Thread):
             #grabs host from queue
             (chunk, (d,m,y)) = self.html_queue.get()
 
+            #timezone stuff
+            utc_tz = pytz.utc
+            local_tz = pytz.timezone('Europe/Vienna')
+
             #parse the chunk
             soup = BeautifulSoup(chunk)
             tds = soup.findAll('td', {'title' : True})
             for elem in tds:    #each event
                 event = Event()
-                utc_tz = pytz.utc
-                europe_vienna = timezone('Europe/Vienna')
 
                 #extract time
                 tfoo = elem['title']
@@ -152,10 +153,9 @@ class ThreadDatamine(threading.Thread):
                 else:   #whole day event (just a date object)
                     dstart = dend = datetime.date(y, m, d)
                 
-                #dtstamp = datetime.datetime.now()
-                event.add('dtstart', europe_vienna.localize(dstart).astimezone(utc_tz))
-                event.add('dtend', europe_vienna.localize(dend).astimezone(utc_tz))
-                event.add('dtstamp', europe_vienna.localize(datetime.datetime.now()).astimezone(utc_tz))
+                event.add('dtstart', local_tz.localize(dstart).astimezone(utc_tz))
+                event.add('dtend', local_tz.localize(dend).astimezone(utc_tz))
+                event.add('dtstamp', local_tz.localize(datetime.datetime.now()).astimezone(utc_tz))
 
                 #extract title
                 if len(elem.next.next.contents) == 2:
@@ -179,15 +179,6 @@ class ThreadDatamine(threading.Thread):
                 #event object of icalender
                 self.cal_queue.put(event)
             self.html_queue.task_done()
-
-class GMT1(datetime.tzinfo):
-    '''Timezone Class for GMT+1'''
-    def utcoffset(self,dt):
-        return datetime.timedelta(hours=1,minutes=00)
-    def tzname(self,dt):
-        return "GMT +1"
-    def dst(self,dt):
-        return datetime.timedelta(0) 
 
 def iter_except(func, exception, first=None):
     '''Call a function repeatedly until an exception is raised.'''
