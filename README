@@ -5,10 +5,10 @@ exchange2ical extracts a public folder calendar from OWA2003 and generates an ic
 the extraction highly depends on how events are added to OWA2003 and might need to be changed for your use case.
 
 dependencies: 
-  - python 2.x (tested with 2.7)
+  - python2 (tested with 2.7)
   - beautiful-soup
-  - python-icalendar
-  - python-pytz
+  - python2-icalendar
+  - python2-pytz
 
 optional:
   - any webserver
