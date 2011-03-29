@@ -8,6 +8,7 @@ dependencies:
   - python 2.x (tested with 2.7)
   - beautiful-soup
   - python-icalendar
+  - python-pytz
 
 optional:
   - any webserver
