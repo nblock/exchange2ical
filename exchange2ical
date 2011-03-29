@@ -19,6 +19,8 @@ import re
 import codecs
 from ConfigParser import ConfigParser
 from icalendar import Calendar, Event
+from pytz import timezone
+import pytz
 import socket
 import os
 import fcntl
@@ -138,20 +140,22 @@ class ThreadDatamine(threading.Thread):
             tds = soup.findAll('td', {'title' : True})
             for elem in tds:    #each event
                 event = Event()
-                gmt1 = GMT1()
+                utc_tz = pytz.utc
+                europe_vienna = timezone('Europe/Vienna')
 
                 #extract time
                 tfoo = elem['title']
                 mo=re.match('^\d{2}:\d{2}-\d{2}:\d{2}',tfoo)
                 if mo:  #regular time
-                    dstart = datetime.datetime(y, m, d, int(tfoo[:2]), int(tfoo[3:5]), tzinfo=gmt1)
-                    dend = datetime.datetime(y, m, d, int(tfoo[6:8]), int(tfoo[9:11]), tzinfo=gmt1)
+                    dstart = datetime.datetime(y, m, d, int(tfoo[:2]), int(tfoo[3:5]))
+                    dend = datetime.datetime(y, m, d, int(tfoo[6:8]), int(tfoo[9:11]))
                 else:   #whole day event (just a date object)
                     dstart = dend = datetime.date(y, m, d)
                 
-                event.add('dtstart', dstart)
-                event.add('dtend', dend)
-                event.add('dtstamp', datetime.datetime.now(tz=gmt1))
+                #dtstamp = datetime.datetime.now()
+                event.add('dtstart', europe_vienna.localize(dstart).astimezone(utc_tz))
+                event.add('dtend', europe_vienna.localize(dend).astimezone(utc_tz))
+                event.add('dtstamp', europe_vienna.localize(datetime.datetime.now()).astimezone(utc_tz))
 
                 #extract title
                 if len(elem.next.next.contents) == 2:
