@@ -67,6 +67,7 @@ class Config():
         level = self.parser.get(self.section, 'log_level')
         level = valid_log_levels.get(level, logging.DEBUG) #if no mapping is available-> DEBUG
         self.parser.set(self.section, 'log_level', level)
+        logger.error('foo')
 
         #title_ignore
         title_ignore = self.parser.get(self.section, 'title_ignore')
@@ -206,16 +207,6 @@ def iter_except(func, exception, first=None):
         pass
 
 def main():
-    #configure logging
-    logger = logging.getLogger('exchange2ical')
-    logger.setLevel(config.log_level)
-    fh = logging.FileHandler(config.log_file)
-    fh.setLevel(config.log_level)
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.info('start exchange2ical')
-
     url_queue = Queue.Queue()
     html_queue = Queue.Queue()
     cal_queue = Queue.Queue()
@@ -266,6 +257,17 @@ if __name__ == '__main__':
     #here is our entry point
     #global config
     config = Config()       
+    
+    #configure logging
+    logger = logging.getLogger('exchange2ical')
+    logger.setLevel(config.log_level)
+    fh = logging.FileHandler(config.log_file)
+    fh.setLevel(config.log_level)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.info('start exchange2ical')
+
     lock_file = config.lock_file
     fp = open(lock_file, 'w')
     try:
