@@ -34,3 +34,6 @@ log_file = exchange2ical.log
 
 #log level (debug, info, warning, error, critical)
 log_level = info
+
+#title_ignore (case insensitive, delimiter is ';')
+title_ignore = string1;String with Spaces;anotherString

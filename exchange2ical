@@ -68,6 +68,14 @@ class Config():
         level = valid_log_levels.get(level, logging.DEBUG) #if no mapping is available-> DEBUG
         self.parser.set(self.section, 'log_level', level)
 
+        #title_ignore
+        title_ignore = self.parser.get(self.section, 'title_ignore')
+        if not title_ignore:
+            title_ignore = []
+        else:
+            title_ignore = [x.lower() for x in title_ignore.split(',')]
+        self.parser.set(self.section, 'title_ignore', title_ignore)
+
 class ExchangeHelpers():
     '''a little helper class for Exchange'''
     log = logging.getLogger('exchange2ical.ExchangeHelpers')
@@ -128,6 +136,7 @@ class ThreadDatamine(threading.Thread):
         threading.Thread.__init__(self)
         self.html_queue = html_queue
         self.cal_queue = cal_queue
+        self.log = logging.getLogger('exchange2ical.ThreadDatamine')
 
     def run(self):
         while True:
@@ -143,6 +152,26 @@ class ThreadDatamine(threading.Thread):
             tds = soup.findAll('td', {'title' : True})
             for elem in tds:    #each event
                 event = Event()
+                
+                #extract title
+                if len(elem.next.next.contents) == 2:
+                    title = elem.next.next.contents[1]
+                    #if title is a text: use element 0
+                    if isinstance(title, Tag):
+                        title = elem.next.next.contents[0]
+                else:
+                    title = elem.next.next.contents[0]
+                #replace some crap
+                title = re.sub('&amp;', '&', title, re.IGNORECASE)
+                title = re.sub('&nbsp;', ' ', title, re.IGNORECASE)
+
+                #check if title is in killfile
+                if title.lower() in config.title_ignore:
+                    self.log.info('ignore event with title: %s' % title)
+                    print 'print: ignore event with title: %s' % title
+                    break
+                event.add('summary', title)
+                event.add('description', title)
 
                 #extract time
                 tfoo = elem['title']
@@ -156,20 +185,6 @@ class ThreadDatamine(threading.Thread):
                 event.add('dtstart', local_tz.localize(dstart).astimezone(utc_tz))
                 event.add('dtend', local_tz.localize(dend).astimezone(utc_tz))
                 event.add('dtstamp', local_tz.localize(datetime.datetime.now()).astimezone(utc_tz))
-
-                #extract title
-                if len(elem.next.next.contents) == 2:
-                    title = elem.next.next.contents[1]
-                    #if title is a text: use element 0
-                    if isinstance(title, Tag):
-                        title = elem.next.next.contents[0]
-                else:
-                    title = elem.next.next.contents[0]
-                #replace some crap
-                title = re.sub('&amp;', '&', title, re.IGNORECASE)
-                title = re.sub('&nbsp;', ' ', title, re.IGNORECASE)
-                event.add('summary', title)
-                event.add('description', title)
                 
                 #extract location (if possible)
                 mo = re.match('.*\((.*)\)$', title)
