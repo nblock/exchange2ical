@@ -73,7 +73,7 @@ class Config():
         if not title_ignore:
             title_ignore = []
         else:
-            title_ignore = [x.lower() for x in title_ignore.split(',')]
+            title_ignore = [x.lower() for x in title_ignore.split(';')]
         self.parser.set(self.section, 'title_ignore', title_ignore)
 
 class ExchangeHelpers():
@@ -168,7 +168,6 @@ class ThreadDatamine(threading.Thread):
                 #check if title is in killfile
                 if title.lower() in config.title_ignore:
                     self.log.info('ignore event with title: %s' % title)
-                    print 'print: ignore event with title: %s' % title
                     break
                 event.add('summary', title)
                 event.add('description', title)
