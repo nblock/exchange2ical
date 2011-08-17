@@ -178,13 +178,14 @@ class ThreadDatamine(threading.Thread):
                 if mo:  #regular time
                     dstart = datetime.datetime(y, m, d, int(tfoo[:2]), int(tfoo[3:5]))
                     dend = datetime.datetime(y, m, d, int(tfoo[6:8]), int(tfoo[9:11]))
+                    event.add('dtstart', local_tz.localize(dstart).astimezone(utc_tz))
+                    event.add('dtend', local_tz.localize(dend).astimezone(utc_tz))
                 else:   #whole day event (just a date object)
                     dstart = dend = datetime.date(y, m, d)
-                
-                event.add('dtstart', local_tz.localize(dstart).astimezone(utc_tz))
-                event.add('dtend', local_tz.localize(dend).astimezone(utc_tz))
+                    event.add('dtstart', dstart)
+                    event.add('dtend', dend)
                 event.add('dtstamp', local_tz.localize(datetime.datetime.now()).astimezone(utc_tz))
-                
+
                 #extract location (if possible)
                 mo = re.match('.*\((.*)\)$', title)
                 if mo:
