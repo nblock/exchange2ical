@@ -73,7 +73,7 @@ class Config():
         if not title_ignore:
             title_ignore = []
         else:
-            title_ignore = [x.lower() for x in title_ignore.split(';')]
+            title_ignore = [re.compile(x, re.IGNORECASE) for x in title_ignore.split(';')]
         self.parser.set(self.section, 'title_ignore', title_ignore)
 
 class ExchangeHelpers():
@@ -166,7 +166,7 @@ class ThreadDatamine(threading.Thread):
                 title = re.sub('&nbsp;', ' ', title, re.IGNORECASE)
 
                 #check if title is in killfile
-                if title.lower() in config.title_ignore:
+                if self._title_is_killfiled(title):
                     self.log.info('ignore event with title: %s' % title)
                     break
                 event.add('summary', title)
@@ -194,6 +194,13 @@ class ThreadDatamine(threading.Thread):
                 #event object of icalender
                 self.cal_queue.put(event)
             self.html_queue.task_done()
+
+    def _title_is_killfiled(self, title):
+        for regex in config.title_ignore:
+            if regex.search(title):
+                return True
+        return False
+
 
 def iter_except(func, exception, first=None):
     '''Call a function repeatedly until an exception is raised.'''
