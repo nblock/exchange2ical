@@ -168,7 +168,7 @@ class ThreadDatamine(threading.Thread):
                 #check if title is in killfile
                 if self._title_is_killfiled(title):
                     self.log.info('ignore event with title: %s' % title)
-                    break
+                    continue
                 event.add('summary', title)
                 event.add('description', title)
 
