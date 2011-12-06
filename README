@@ -25,6 +25,3 @@ additional steps when using a webserver:
  3) chown exchange:http /var/http/cal
  4) chmod 2750 /var/http/cal
  5) see 'install process' above
-
-bugs:
-consider the code rather unstable and buggy.
