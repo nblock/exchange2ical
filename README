@@ -1,7 +1,7 @@
 exchange2ical
 
 about:
-exchange2ical extracts a public folder calendar from OWA2003 and generates an ics file from the data.
+exchange2ical extracts a public folder calendar from OWA2003 and generates a ics file from the data.
 the extraction highly depends on how events are added to OWA2003 and might need to be changed for your use case.
 
 dependencies: 
